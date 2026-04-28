@@ -2,16 +2,20 @@
 Matching API – run geo-affinity matching engine, create/list assignments
 Supports both Firebase Firestore (cloud) and SQL backends with auto-failover.
 """
+import math
+import logging
 from uuid import UUID
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.core.db_manager import db_manager
 from app.core.database import get_db, Signal, Volunteer, Assignment
 from app.core.algorithms import rank_volunteers, haversine_km
 from app.models.schemas import MatchResult, AssignmentOut
+
+logger = logging.getLogger("neurorelief.matching")
 
 router = APIRouter(prefix="/match", tags=["Matching"])
 
@@ -142,8 +146,6 @@ async def match_volunteers_for_signal(
             raise HTTPException(status_code=404, detail="Signal not found")
 
         # Fetch available volunteers within 50km
-        from sqlalchemy import func
-        import math
 
         sig_lat_rad = math.radians(signal.center_lat)
         sig_lon_rad = math.radians(signal.center_lon)
@@ -191,8 +193,7 @@ async def match_volunteers_for_signal(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in match_volunteers: {e}")
+        logger.error(f"SQL failed in match_volunteers: {e}")
         await db_manager.handle_sql_failure()
         return await _match_firebase(str(signal_id), top_n)
 
@@ -243,8 +244,7 @@ async def assign_volunteers(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in assign_volunteers: {e}")
+        logger.error(f"SQL failed in assign_volunteers: {e}")
         await db_manager.handle_sql_failure()
         return await _assign_firebase(str(signal_id), top_n)
 
@@ -264,7 +264,6 @@ async def list_assignments(
         )
         return result.scalars().all()
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in list_assignments: {e}")
+        logger.error(f"SQL failed in list_assignments: {e}")
         await db_manager.handle_sql_failure()
         return await _list_assignments_firebase(limit)

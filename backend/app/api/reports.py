@@ -2,11 +2,14 @@
 Reports API – submit community reports, trigger signal fusion
 Supports both Firebase Firestore (cloud) and SQL backends with auto-failover.
 """
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+
+logger = logging.getLogger("neurorelief.reports")
 
 from app.core.db_manager import db_manager
 from app.core.database import get_db, Report, Signal
@@ -210,8 +213,7 @@ async def submit_report(payload: ReportCreate, db: AsyncSession = Depends(get_db
     try:
         return await _submit_report_sql(payload, db)
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in submit_report: {e}")
+        logger.error(f"SQL failed in submit_report: {e}")
         await db_manager.handle_sql_failure()
         return await _submit_report_firebase(payload)
 
@@ -228,8 +230,7 @@ async def list_reports(skip: int = 0, limit: int = 50, db: AsyncSession = Depend
         )
         return result.scalars().all()
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in list_reports: {e}")
+        logger.error(f"SQL failed in list_reports: {e}")
         await db_manager.handle_sql_failure()
         return await _list_reports_firebase(skip, limit)
 
@@ -248,7 +249,6 @@ async def get_report(report_id: UUID, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in get_report: {e}")
+        logger.error(f"SQL failed in get_report: {e}")
         await db_manager.handle_sql_failure()
         return await _get_report_firebase(str(report_id))

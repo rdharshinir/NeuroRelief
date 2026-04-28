@@ -2,11 +2,14 @@
 Signals API – list/get fused need signals, trigger priority refresh
 Supports both Firebase Firestore (cloud) and SQL backends with auto-failover.
 """
+import logging
 from uuid import UUID
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+logger = logging.getLogger("neurorelief.signals")
 
 from app.core.db_manager import db_manager
 from app.core.database import get_db, Signal
@@ -79,8 +82,7 @@ async def list_signals(
         result = await db.execute(query)
         return result.scalars().all()
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in list_signals: {e}")
+        logger.error(f"SQL failed in list_signals: {e}")
         await db_manager.handle_sql_failure()
         return await _list_signals_firebase(status, limit)
 
@@ -99,8 +101,7 @@ async def get_signal(signal_id: UUID, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in get_signal: {e}")
+        logger.error(f"SQL failed in get_signal: {e}")
         await db_manager.handle_sql_failure()
         return await _get_signal_firebase(str(signal_id))
 
@@ -125,8 +126,7 @@ async def refresh_priority(signal_id: UUID, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in refresh_priority: {e}")
+        logger.error(f"SQL failed in refresh_priority: {e}")
         await db_manager.handle_sql_failure()
         return await _refresh_priority_firebase(str(signal_id))
 
@@ -156,7 +156,6 @@ async def update_signal_status(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in update_signal_status: {e}")
+        logger.error(f"SQL failed in update_signal_status: {e}")
         await db_manager.handle_sql_failure()
         return await _update_status_firebase(str(signal_id), new_status)

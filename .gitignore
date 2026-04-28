@@ -10,7 +10,16 @@ desktop.ini
 # =========================
 .env
 .env.*
+!.env.example
 *.env
+
+# =========================
+# Credentials & Secrets
+# =========================
+firebase-credentials.json
+*-credentials.json
+*.pem
+*.key
 
 # =========================
 # Logs
@@ -57,8 +66,8 @@ build/
 # =========================
 # Docker
 # =========================
-.dockerignore
 docker-compose.override.yml
+
 # =========================
 # Temporary Files
 # =========================

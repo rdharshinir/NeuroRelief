@@ -1,8 +1,10 @@
 """
 NeuroRelief – Sample Dataset + Dummy Data Generator
 Run:  python seed.py
+      python seed.py --base-url http://backend:8000   (Docker)
 Seeds the database with volunteers and reports, then triggers signal fusion.
 """
+import argparse
 import asyncio
 import random
 from datetime import datetime, timezone, timedelta
@@ -91,6 +93,9 @@ async def seed():
 
         print("\n[DONE] Seed complete! Visit http://localhost:5173 for dashboard.\n")
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Seed NeuroRelief database")
+    parser.add_argument("--base-url", default=BASE_URL, help="Backend API base URL (default: http://localhost:8000)")
+    args = parser.parse_args()
+    BASE_URL = args.base_url
     asyncio.run(seed())

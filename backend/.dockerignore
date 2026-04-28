@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
+.env.*
+firebase-credentials.json
+.git/
+.gitignore
+run_seed.py
+*.egg-info/
+.cache/

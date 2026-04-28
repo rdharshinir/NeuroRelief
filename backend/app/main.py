@@ -3,7 +3,13 @@ NeuroRelief – FastAPI Application Entry Point
 Cloud-first architecture: Firebase Firestore (default) with SQL fallback.
 AI-powered severity extraction via Gemma 4.
 """
+import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Ensure .env is loaded early
+load_dotenv()
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,10 +65,13 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal Server Error occurred. Please try again later."},
     )
 
-# Allow React dev server (port 5173) and any origin in dev
+# CORS – configurable via CORS_ORIGINS env var (comma-separated)
+cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
+cors_origins = ["*"] if cors_origins_raw.strip() == "*" else [o.strip() for o in cors_origins_raw.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = ["*"],
+    allow_origins     = cors_origins,
     allow_credentials = True,
     allow_methods     = ["*"],
     allow_headers     = ["*"],

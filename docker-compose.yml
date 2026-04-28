@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: neurorelief
       POSTGRES_PASSWORD: neurorelief
@@ -12,7 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U neurorelief -d neurorelief"]
       interval: 5s
@@ -20,21 +18,31 @@ services:
       retries: 5
 
   backend:
-    build: 
+    build:
       context: ./backend
-    restart: always
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
+      - STORAGE_MODE=sql
       - DATABASE_URL=postgresql+asyncpg://neurorelief:neurorelief@db:5432/neurorelief
+      - CORS_ORIGINS=http://localhost,http://localhost:80
+    volumes:
+      - ./backend/firebase-credentials.json:/app/firebase-credentials.json:ro
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; print(httpx.get('http://localhost:8000/health').status_code)"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   frontend:
     build:
       context: ./frontend
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:

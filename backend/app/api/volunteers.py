@@ -2,9 +2,12 @@
 Volunteers API – register/list volunteers
 Supports both Firebase Firestore (cloud) and SQL backends with auto-failover.
 """
+import logging
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger("neurorelief.volunteers")
 from sqlalchemy import select
 
 from app.core.db_manager import db_manager
@@ -80,8 +83,7 @@ async def register_volunteer(payload: VolunteerCreate, db: AsyncSession = Depend
         await db.refresh(vol)
         return vol
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in register_volunteer: {e}")
+        logger.error(f"SQL failed in register_volunteer: {e}")
         await db_manager.handle_sql_failure()
         return await _register_volunteer_firebase(payload)
 
@@ -103,8 +105,7 @@ async def list_volunteers(
         result = await db.execute(query)
         return result.scalars().all()
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in list_volunteers: {e}")
+        logger.error(f"SQL failed in list_volunteers: {e}")
         await db_manager.handle_sql_failure()
         return await _list_volunteers_firebase(available_only, limit)
 
@@ -123,8 +124,7 @@ async def get_volunteer(volunteer_id: UUID, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in get_volunteer: {e}")
+        logger.error(f"SQL failed in get_volunteer: {e}")
         await db_manager.handle_sql_failure()
         return await _get_volunteer_firebase(str(volunteer_id))
 
@@ -149,7 +149,6 @@ async def toggle_availability(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in toggle_availability: {e}")
+        logger.error(f"SQL failed in toggle_availability: {e}")
         await db_manager.handle_sql_failure()
         return await _toggle_availability_firebase(str(volunteer_id), is_available)

@@ -2,10 +2,13 @@
 Dashboard API – aggregated stats for the frontend
 Supports both Firebase Firestore (cloud) and SQL backends with auto-failover.
 """
+import logging
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+
+logger = logging.getLogger("neurorelief.dashboard")
 
 from app.core.db_manager import db_manager
 from app.core.database import get_db, Signal, Volunteer, Report, Assignment
@@ -199,7 +202,6 @@ async def get_dashboard(db: AsyncSession = Depends(get_db)):
         )
 
     except Exception as e:
-        import logging
-        logging.getLogger("neurorelief").error(f"SQL failed in get_dashboard: {e}")
+        logger.error(f"SQL failed in get_dashboard: {e}")
         await db_manager.handle_sql_failure()
         return await _get_dashboard_firebase()

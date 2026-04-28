@@ -2,6 +2,11 @@
 Database connection – SQLAlchemy async engine + session factory
 """
 import os
+from dotenv import load_dotenv
+
+# Ensure .env is loaded before module-level DATABASE_URL read
+load_dotenv()
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, JSON, ForeignKey, Text, Uuid
