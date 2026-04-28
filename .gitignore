@@ -1,0 +1,73 @@
+# =========================
+# OS & System Files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Dependency Directories
+# =========================
+node_modules/
+venv/
+env/
+__pycache__/
+
+# =========================
+# Python
+# =========================
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# =========================
+# Build / Distribution
+# =========================
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# =========================
+# IDE / Editor Files
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Docker
+# =========================
+.dockerignore
+docker-compose.override.yml
+# =========================
+# Temporary Files
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# Cache
+# =========================
+.cache/
+*.cache
