@@ -16,10 +16,20 @@ from datetime import datetime, timezone
 # ─────────────────────────────────────────────
 # DATABASE URL (read from env, fallback to local dev)
 # ─────────────────────────────────────────────
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite+aiosqlite:///./neurorelief.db"
-)
+_raw_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./neurorelief.db")
+
+# ── Normalise common Render / provider quirks ──
+# 1. Render supplies  postgres://…  but SQLAlchemy 2 requires  postgresql://…
+if _raw_url.startswith("postgres://"):
+    _raw_url = _raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _raw_url.startswith("postgresql://"):
+    _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+# 2. Fix missing colon – e.g. postgresql+asyncpg//… → postgresql+asyncpg://…
+if "postgresql+asyncpg//" in _raw_url and "postgresql+asyncpg://" not in _raw_url:
+    _raw_url = _raw_url.replace("postgresql+asyncpg//", "postgresql+asyncpg://", 1)
+
+DATABASE_URL = _raw_url
 
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
 
